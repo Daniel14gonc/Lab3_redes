@@ -32,9 +32,6 @@ class Flooding(object):
                 tabla_visitados = input("Ingrese la tabla de visitados de la forma 'nodo1,nodo2,nodo3'> ")
                 if destino == self.me:
                     print(f"Mensaje recibido de: {emisor} el mensaje es: {mensaje}")
-                    
-                elif emisor == self.me:
-                    print("Yo envien este mensaje, no es necesario reenviarlo")
                 elif self.me in tabla_visitados:
                     print("Mensaje ya enviado, no es necesario reenviarlo")
                 else:
