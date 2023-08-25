@@ -6,8 +6,9 @@ class Flooding(object):
 
     def pedir(self):
         self.me = input("Ingresa el nombre del nodo> ")
-        self.misvecinos = input("Ingresa los vecinos separados por coma> ")
-        
+        misvecinos = input("Ingresa los vecinos separados por coma> ")
+        self.vecinos = misvecinos.split(",")
+    
     def flooding(self):
         opcion = "0"
         while opcion != "3":
@@ -18,25 +19,28 @@ class Flooding(object):
             if opcion == "1":
                 mensaje = input("Ingrese el mensaje> ")
                 destino = input("Ingrese el destino> ")
-                vecinos = "".join(self.misvecinos.split(","))
-                print("Enviando mensaje a mis vecinos: ", vecinos)
+                print(f"Enviando mensaje a mis vecinos: [ {self.vecinos} ]")
                 print("Destinatario del mensaje: ", destino)
-                print("Tabla de visitados: [{self.me}]")
+                print(f"Tabla de visitados: [{self.me}]")
             elif opcion == "2":
-                recibido = input("Ingrese el mensaje de la forma 'destino,mensaje'> ")
+                recibido = input("Ingrese el mensaje de la forma 'destino,mensaje,emisor'> ")
                 tupla = recibido.split(",")
                 destino = tupla[0]
                 mensaje = tupla[1]
+                emisor = tupla[2]
                     
                 tabla_visitados = input("Ingrese la tabla de visitados de la forma 'nodo1,nodo2,nodo3'> ")
                 if destino == self.me:
-                    print("Mensaje recibido: ", mensaje)
+                    print(f"Mensaje recibido de: {emisor} el mensaje es: {mensaje}")
+                    
+                elif emisor == self.me:
+                    print("Yo envien este mensaje, no es necesario reenviarlo")
                 elif self.me in tabla_visitados:
-                    print("Mensaje ya visitado")
+                    print("Mensaje ya enviado, no es necesario reenviarlo")
                 else:
-                    print("Enviando mensaje a mis vecinos: ", vecinos)
-                    print("Destinatario del mensaje: ", destino)
-                    print("Tabla de visitados: ", tabla_visitados+",{self.me}")
+                    print("Enviando mensaje a mis vecinos: ", self.vecinos)
+                    print(f"Destinatario del mensaje: {destino} emisor: {emisor}")
+                    print("Tabla de visitados: [", tabla_visitados+f", {self.me}] ")
 
 flooding = Flooding()
 flooding.flooding()
