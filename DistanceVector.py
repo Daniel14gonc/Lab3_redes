@@ -33,7 +33,7 @@ class DistanceVector(object):
             if n != self.me:
                 self.tabla[n] = infinitos
         # self.tabla = eval("{'X': [['X', 0], ['Y', 2], ['Z', 7]], 'Y': [['X', 2], ['Y', 0], ['Z', 1]], 'Z': [['X', 7], ['Y', 1], ['Z', 0]]}")
-            
+        self.old_tabla = self.tabla.copy()
         print(self.tabla)
 
     def receive_info_from_node(self):
@@ -54,7 +54,6 @@ class DistanceVector(object):
             if n[0] == Node:
                 n[1] = cost
         
-        
     def update_table(self):
         for n in self.nodos:
             if n != self.me:
@@ -66,7 +65,11 @@ class DistanceVector(object):
                         if costo1 + costo < costo2:
                             self.set_new_cost(self.me,n1,costo1 + costo)
                             self.hop_table[n1] = objetivo
-                
+        
+        if self.old_tabla == self.tabla:
+            print("Convergencia alcanzada")
+        
+        self.old_tabla = self.tabla.copy()
     
     def get_own_table(self):
         return self.tabla[self.me]
@@ -76,7 +79,7 @@ class DistanceVector(object):
         
     def receive_message(self, emisor, receptor, mensaje):
         if receptor == self.me:
-            print(mensaje)
+            print(f"Mensaje recibido de {emisor} contenido: {mensaje}")
         else:
             print("Emisor: ", emisor)
             print("Enviar mensaje:", mensaje)
@@ -104,6 +107,7 @@ while opcion != "6":
         emisor = input("Ingresa el nombre del nodo emisor> ")
         receptor = input("Ingresa el nombre del nodo receptor> ")
         mensaje = input("Ingresa el mensaje> ")
+        distanceVector.receive_message(emisor, receptor, mensaje)
     elif opcion == "4":
         emisor = input("Ingresa el nombre del nodo emisor> ")
         receptor = input("Ingresa el nombre del nodo receptor> ")

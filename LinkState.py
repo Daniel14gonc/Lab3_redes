@@ -85,6 +85,15 @@ class LinkState(object):
     def print_distances(self):
         for node in self.distances:
             print("Distancia de {} a {} es {}".format(self.me, node, self.distances[node]))
+    
+    def receive_message(self, emisor, receptor, mensaje):
+        if receptor == self.me:
+            print("El destino del mensaje era el nodo actual")
+            print(mensaje)
+        else:
+            print("Emisor: ", emisor)
+            print("Enviar mensaje:", mensaje)
+            print("El siguiente nodo al que se debe mandar es", self.get_next_node(receptor))
 
 
 node = LinkState()
@@ -101,11 +110,7 @@ while opcion != "3":
         print("El mensaje es", mensaje)
         print("El siguiente nodo al que se debe mandar es", siguiente)
     elif opcion == "2":
-        mensaje = input("Ingrese el mensaje de la forma 'destino,mensaje'> ")
+        mensaje = input("Ingrese el mensaje de la forma 'emisor,destino,mensaje'> ")
         mensaje = mensaje.split(",")
-        if mensaje[0] == node.me:
-            print("El destino del mensaje era el nodo actual")
-            print("El mensaje es", mensaje[1])
-        else:
-            print("El mensaje es", mensaje[1])
-            print("El siguiente nodo al que se debe mandar es", node.get_next_node(mensaje[0]))
+        mensaje = [x.strip() for x in mensaje]
+        node.receive_message(mensaje[0], mensaje[1], mensaje[2])
