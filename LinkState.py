@@ -7,6 +7,15 @@ class LinkState(object):
 
     def pedir(self):
         self.me = input("Ingresa el nombre del nodo> ")
+        misvecinos = input("Ingresa los vecinos separados por coma> ")
+        pesosvecinos = input("Ingresa los pesos de los vecinos separados por coma> ")
+
+        misvecinos = misvecinos.split(",")
+        misvecinos = [x.strip() for x in misvecinos]
+        pesosvecinos = pesosvecinos.split(",")
+        pesosvecinos = [int(x.strip()) for x in pesosvecinos]
+
+        self.neighbors = list(zip(misvecinos, pesosvecinos))
         self.get_topology()
         self.dijkstra()
     
