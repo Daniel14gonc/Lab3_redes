@@ -20,12 +20,12 @@ class LinkState(object):
         self.dijkstra()
     
     def get_topology(self):
-        self.topology = {
-            "A": [("B", 2)], 
-            "B": [("A", 2), ("C", 4), ("D", 5)],
-            "C": [("B", 4), ("D", 1)],
-            "D": [("B", 5), ("C", 1)]
-        }
+        print("La topologia se obtiene del archivo topology_LinkState.txt")
+        try:
+            with open("topology_LinkState.txt", "r") as archivo:
+                self.topology = eval(archivo.read())
+        except:
+            print("La topología no se cargo correctamente")
         
     def dijkstra(self):
         self.distances = {}
