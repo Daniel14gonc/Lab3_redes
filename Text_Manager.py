@@ -29,27 +29,54 @@ async def pretty_print_async(text,color):
         await aprint(text)
         
         
-def valid_input_string(text,):
+def valid_input_string(text):
     input_data = input(text)
     while input_data == "":
         pretty_print("Input vacio, porfavor ingrese lo solicitado","red")
         input_data = input(text)
     return input_data
 
+async def valid_input_string_async(text):
+    input_data = await  ainput(text)
+    while input_data == "":
+        pretty_print_async("Input vacio, porfavor ingrese lo solicitado","red")
+        input_data = await  ainput(text)
+    return input_data
+
+
+async def valid_input_int_async(text, rango):
+    input_data = await ainput(text)
+    valid = False
+    while input_data == "" or not input_data.isnumeric() or not valid:
+        if input_data.isnumeric():
+            input_data_int = int(input_data)
+            if input_data_int > 0 and input_data_int <= rango:
+                valid  = True
+                break
+        await pretty_print_async("El input debe de ser un número entre las opciones y no puede ser vacío","red")
+        input_data = await ainput(text)
+    
+    return input_data
+
+
 def ask_data(diferent):
     data = {}
     
     nombre = valid_input_string("Ingresa el nombre del nodo> ")
     
-    data["nombre"] = nombre
+    data["nombre"] = 'Archila161250'+nombre+'@alumchat.xyz'
     
     if diferent:
-        vecinos = valid_input_string("Ingresa los vecinos separados por coma> ")
+        vecinos = valid_input_string("Ingresa los vecinos separados por coma> ").split(",")
         cantidad = valid_input_string("Ingrese la cantidad total de nodos en la topología> ")
         data["cantidad"] = cantidad
     else:
         vecinos = valid_input_string("Ingresa los vecinos separados por coma> ").split(",")
-    data["vecinos"] = vecinos.split(",")
+        
+    temp_vecinos = []
+    for vecino in vecinos:
+        temp_vecinos.append('Archila161250'+vecino.strip()+"@alumchat.xyz")
+    data["vecinos"] = temp_vecinos
     
     return data
             
@@ -76,5 +103,11 @@ def data_to_inicialize_node():
     else:
         data = ask_data(False)
     
-    data["opcion"] = opcion
-    return data
+    return (data,opcion)
+
+async def flooding_menu():
+    await pretty_print_async("\n", "green")
+    await pretty_print_async("1. Enviar mensaje", "green")
+    await pretty_print_async("2. Cerrar nodo", "green")
+    op = await valid_input_int_async("> ",2)
+    return op
