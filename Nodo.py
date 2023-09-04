@@ -45,7 +45,10 @@ class Node(slixmpp.ClientXMPP):
     async def start_all(self):
         await ainput("Al presionar Enter se agregaran los vecinos")
         await self.add_neighbors()
-        await self.menu_algoritmos()
+        try:
+            await self.menu_algoritmos()
+        except Exception as e:
+            await pretty_print_async(e,"red")
 
         
     async def LogIn(self,event):
@@ -116,9 +119,10 @@ class Node(slixmpp.ClientXMPP):
     async def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
             try:
-                emisor = msg['from'].remove(self.prefijo).split("@")[0]
+                emisor = str(msg['from'])
+                emisor = emisor.replace(self.prefijo,"").replace("@alumchat.xyz","").split("/")[0]
                 json_text = eval(msg['body'])
-                await pretty_print_async(f"Mensaje recibido de {emisor}","green")
+                await pretty_print_async(f"Mensaje recibido de '{emisor}'","green")
                 await self.intercept_message(json_text)
             except Exception as e:
                 await pretty_print_async("Formato del json es incorrecto","red")
@@ -180,9 +184,9 @@ class Node(slixmpp.ClientXMPP):
                 
         if op == cont: # Ingresar manualmente
             dicct[cont] = await ainput("Ingresa el nombre del usuario al que deseas enviar un mensaje (sin dominiio ni prefijo):")
-        dicct[op] = self.prefijo+dicct[op]+"@alumchat.xyz"
+            dicct[op] = self.prefijo+dicct[op]+"@alumchat.xyz"
         men = await ainput("Ingresa el mensaje que deseas enviar:")
-        return (dicct[op],men)    
+        return (dicct[op].lower(),men)    
         
     
          
@@ -200,6 +204,8 @@ class Node(slixmpp.ClientXMPP):
             await response.send()
             self.boundjid.jid
             await pretty_print_async("Nodo eliminado correctamente","red")
+            self.is_connected = False
+            self.disconnect()
         except IqError as e:
             await pretty_print_async(f"Problemas para enviar la solicitud: {e.iq['error']['text']}", "red")
             self.disconnect()

@@ -23,7 +23,6 @@ class Flooding(Node):
         
 
     async def input_message(self):
-        await aprint("Verificacion 1")
         user, message = await self.menu_mensajes_priv()
         json_message = {
             "type": "message",
@@ -54,7 +53,8 @@ class Flooding(Node):
         elif self.name_domain not in intermediarios:
             json_text['headers']['intermediarios'].append(self.name_domain)
             text = json.dumps(json_text)
+            de = destino.replace("@alumchat.xyz","").replace("archila161250","").split("/")[0]
             await self._send_message_neighbors(text)
-            await pretty_print_async(f"Mensaje reenviado de:{self.name_domain} a vecinos", "magenta")
+            await pretty_print_async(f"Mensaje reenviado de:'{de}' a vecinos", "magenta")
         else:
             await pretty_print_async(f"Mensaje ya había pasado por el nodo. Se aborta", "yellow")

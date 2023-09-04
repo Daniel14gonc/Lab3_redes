@@ -12,6 +12,8 @@ def pretty_print(text,color):
         print("\033[38;2;0;255;255m {}\033[00m" .format(text))
     elif color == "magenta":
         print("\033[95m {}\033[00m" .format(text))
+    elif color == "yellow":
+        print("\033[93m {}\033[00m" .format(text))
     else:
         print(text)
         
@@ -25,6 +27,8 @@ async def pretty_print_async(text,color):
         await aprint("\033[38;2;0;255;255m {}\033[00m" .format(text))
     elif color == "magenta":
         await aprint("\033[95m {}\033[00m" .format(text))
+    elif color == "yellow":
+        await aprint("\033[93m {}\033[00m" .format(text))
     else:
         await aprint(text)
         
