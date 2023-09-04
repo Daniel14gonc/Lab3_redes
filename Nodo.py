@@ -59,9 +59,17 @@ class Node(object):
             except IqTimeout:
                 await pretty_print_async("\nError:\nSe ha excedido el tiempo de respuesta","red")
 
+    async def add_neighbors(self):
+        for neighbor in self.neighbors:
+            try:
+                self.send_presence_subscription(pto=neighbor, ptype='subscribe')
+                await self.get_roster()
+            except IqError as e:
+                await pretty_print_async(f"Problemas para enviar la solicitud: {e.iq['error']['text']}", "red")
+            except IqTimeout:
+                await pretty_print_async("\nError:\nSe ha excedido el tiempo de respuesta","red")
             
     async def message(self, msg):
-        #Mensajes individuales
         if msg['type'] in ('chat', 'normal'):
             try:
                 emisor = msg['from']
@@ -79,10 +87,10 @@ class Node(object):
         
         if valid_register:
             self.LogIn()
+            ainput("Al presionar Enter se agregaran los vecinos")
+            await self.add_neighbors()
         else:
             await pretty_print_async("No se pudo registrar el nodo","red")
-            
-        
         pass
         
     def register(client, password):
