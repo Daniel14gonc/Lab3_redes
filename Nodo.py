@@ -113,8 +113,6 @@ class Node(slixmpp.ClientXMPP):
     async def intercept_message(self, json_text):
         pass
     
-    async def algoritmo(self,diccionario):
-        pass
             
     async def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
@@ -129,7 +127,6 @@ class Node(slixmpp.ClientXMPP):
                 await pretty_print_async(e,"red")
                 
         
-        await self.algoritmo(json_text)
         
     async def get_contacts(self):
         #Obtener contactos
@@ -200,12 +197,13 @@ class Node(slixmpp.ClientXMPP):
         response.append(fragment)
         
         try:
-            self.is_connected = False
             await response.send()
             self.boundjid.jid
             await pretty_print_async("Nodo eliminado correctamente","red")
             self.is_connected = False
             self.disconnect()
+            self.menu.cancel()
+            
         except IqError as e:
             await pretty_print_async(f"Problemas para enviar la solicitud: {e.iq['error']['text']}", "red")
             self.disconnect()

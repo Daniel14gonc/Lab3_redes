@@ -62,6 +62,8 @@ async def valid_input_int_async(text, rango):
     
     return input_data
 
+def clean_nombre(nombre):
+    return nombre.replace("@alumchat.xyz","").replace("archila161250","").split("/")[0]
 
 def ask_data(diferent):
     data = {}
@@ -79,7 +81,8 @@ def ask_data(diferent):
         
     temp_vecinos = []
     for vecino in vecinos:
-        temp_vecinos.append('Archila161250'+vecino.strip()+"@alumchat.xyz")
+        texto = 'Archila161250'+vecino.strip()+"@alumchat.xyz"
+        temp_vecinos.append(texto.lower())
     data["vecinos"] = temp_vecinos
     
     return data
@@ -114,4 +117,12 @@ async def flooding_menu():
     await pretty_print_async("1. Enviar mensaje", "green")
     await pretty_print_async("2. Cerrar nodo", "green")
     op = await valid_input_int_async("> ",2)
+    return op
+
+async def link_state_menu():
+    await pretty_print_async("\n", "green")
+    await pretty_print_async("1. Iniciar flooding", "green")
+    await pretty_print_async("2. Enviar mensaje", "green")
+    await pretty_print_async("3. Cerrar nodo", "green")
+    op = await valid_input_int_async("> ", 3)
     return op

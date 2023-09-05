@@ -53,7 +53,7 @@ class Flooding(Node):
         elif self.name_domain not in intermediarios:
             json_text['headers']['intermediarios'].append(self.name_domain)
             text = json.dumps(json_text)
-            de = self.name_domain.replace("@alumchat.xyz","").replace("archila161250","").split("/")[0]
+            de = clean_nombre(origen)
             await self._send_message_neighbors(text)
             await pretty_print_async(f"Mensaje reenviado de:'{de}' a vecinos", "magenta")
         else:
