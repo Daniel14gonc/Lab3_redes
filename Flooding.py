@@ -48,6 +48,8 @@ class Flooding(Node):
         message = json_text['payload']
         
         if self.name_domain == destino:
+            text = f"Origen de mensaje: {message}"
+            await pretty_print_async(text, "aqua")
             text = f"Contenido de mensaje: {message}"
             await pretty_print_async(text, "aqua")
         elif self.name_domain not in intermediarios:
