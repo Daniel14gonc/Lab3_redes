@@ -110,6 +110,9 @@ class LinkState(Node):
             }
             json_text = json.dumps(json_message)      
             siguiente = self.get_next_node(user)
+            if siguiente is None:
+                await pretty_print_async("No es posible enviar el mensaje, no existe una ruta", "red")
+                return
             siguiente_text = clean_nombre(siguiente)
             self.send_message_xmpp(mensaje=json_text, destino=siguiente)
             await pretty_print_async(f"Enviando mensaje a '{siguiente_text}'", "magenta")
@@ -133,6 +136,9 @@ class LinkState(Node):
                 text = json.dumps(json_text)
                 de = clean_nombre(origen)
                 siguiente = self.get_next_node(destino)
+                if siguiente is None:
+                    await pretty_print_async("No es posible enviar el mensaje, no existe una ruta", "red")
+                    return
                 # await pretty_print_async(f"{str(siguiente)}", "magenta")
                 siguiente_text = clean_nombre(siguiente)
                 self.send_message_xmpp(mensaje=text, destino=siguiente)
@@ -177,13 +183,19 @@ class LinkState(Node):
 
     def get_path(self, destination):
         path = [destination]
-        while self.previous[destination] is not None:
+        while destination in self.previous and self.previous[destination] is not None:
             destination = self.previous[destination]
             path.insert(0, destination)
-        return path
+            
+        if len(path) == 1 and destination not in self.previous:
+            return False, path
+        
+        return True, path
     
     def get_next_node(self, destination):
-        path = self.get_path(destination)
+        result, path = self.get_path(destination)
+        if not result:
+            return None
         if len(path) > 1:
             return path[1]
         return path[0]

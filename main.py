@@ -25,7 +25,7 @@ while bandera < 1:
                 node.connect(disable_starttls=True)
                 node.process(forever=False)
             except Exception as e:
-                print(e)
+                pretty_print(e)
         else:
             pretty_print("Error al registrar el nodo","red")
     
