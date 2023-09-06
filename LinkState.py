@@ -123,8 +123,9 @@ class LinkState(Node):
             origen = json_text['headers']['origen']
             destino = json_text['headers']['destino']
             message = json_text['payload']
+            de = clean_nombre(origen)
             if self.name_domain == destino:
-                text = f"Origen de mensaje: {message}"
+                text = f"Origen de mensaje: {de}"
                 await pretty_print_async(text, "aqua")
                 text = f"Contenido de mensaje: {message}"
                 await pretty_print_async(text, "aqua")

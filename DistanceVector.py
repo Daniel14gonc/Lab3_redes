@@ -8,6 +8,7 @@ import json
 import heapq
 import asyncio
 import datetime
+import copy
 
 
 class DistanceVector(Node):
@@ -22,12 +23,13 @@ class DistanceVector(Node):
         self.create_table()
         self.old_table = self.tabla.copy()
         self.hop_table = {self.name_domain: self.name_domain}
+        self.infinity = 1000000000000
         for n in self.neighbors:
             self.hop_table[n] = n
         
 
     def create_table(self):
-        self_entry = {self.name_domain: 0}
+        self_entry = {self.name_domain: 0} 
         for n in self.neighbors:
             if n != self.name_domain:
                 self_entry[n] = 1
@@ -42,7 +44,8 @@ class DistanceVector(Node):
     async def add_node_to_table(self, node):
         self_table = self.tabla[self.name_domain]
         if node not in self_table:
-            self_table[node] = float('inf')
+            self_table[node] = self.infinity
+        self.tabla[self.name_domain] = self_table
 
     async def menu_algoritmos(self):
         op = ''
@@ -82,10 +85,11 @@ class DistanceVector(Node):
     
     def brute_force(self,key,Node):
         table_values = self.tabla[key]
-        if Node in table_values:
-            return Node, table_values[Node]
+        if Node not in table_values:
+            table_values[Node] = self.infinity
         
-        return Node, float('inf')
+        self.tabla[key] = table_values
+        return Node, table_values[Node]
             
     def set_new_cost(self, key, Node, cost):
         table_values = self.tabla[key]
@@ -109,7 +113,10 @@ class DistanceVector(Node):
         # self.old_table = self.tabla.copy()
     
     def get_next_node(self, destination):
-        return self.hop_table[destination]
+        try:
+            return (True, self.hop_table[destination])
+        except:
+            return (False, destination)
 
     async def algoritmo(self):
         await self.recalculate_table()
@@ -131,11 +138,10 @@ class DistanceVector(Node):
         self.temporizador = asyncio.create_task(self.iniciar_temporizador(self.tiempo))
 
     async def check_convergence(self):
-        await pretty_print_async(f"Tabla actual: {self.tabla}", "magenta")
-        await pretty_print_async(f"Tabla anterior: {self.old_table}", "magenta")
         return self.tabla[self.name_domain] == self.old_table[self.name_domain]
 
     async def update_table(self, origin, entry):
+        self.old_table = copy.deepcopy(self.tabla)
         await self.add_node_to_table(origin)
         await self.add_entry_to_table(origin, entry)
         await self.algoritmo()
@@ -146,12 +152,12 @@ class DistanceVector(Node):
             await self.activate_timer()
             await self._send_flooding_message()
         
-        self.old_table = self.tabla.copy()
 
     async def handle_info_message(self, json_text):
         origen = json_text['headers']['origen']
         intermediarios = json_text['headers']['intermediarios']
         payload = json_text['payload']
+        await pretty_print_async(payload, "yellow")
         if self.name_domain not in intermediarios and not self.ready:
             json_text['headers']['intermediarios'].append(self.name_domain)
             message = json.dumps(json_text)
@@ -174,7 +180,10 @@ class DistanceVector(Node):
                 "payload": message
             }
             json_text = json.dumps(json_message)
-            siguiente= self.get_next_node(user)
+            exists, siguiente= self.get_next_node(user)
+            if not exists:
+                await pretty_print_async("El nodo destino no existe", "red")
+                return
             siguiente_text = clean_nombre(siguiente)
             self.send_message_xmpp(mensaje=json_text, destino=siguiente)
             await pretty_print_async(f"Enviando mensaje a '{siguiente_text}'", "magenta")
@@ -189,14 +198,17 @@ class DistanceVector(Node):
             destino = json_text['headers']['destino']
             message = json_text['payload']
             if self.name_domain == destino:
-                text = f"Origen de mensaje: {message}"
+                text = f"Origen de mensaje: {origen}"
                 await pretty_print_async(text, "aqua")
                 text = f"Contenido de mensaje: {message}"
                 await pretty_print_async(text, "aqua")
             else:
                 text = json.dumps(json_text)
                 de = clean_nombre(origen)
-                siguiente = self.get_next_node(destino)
+                exists, siguiente = self.get_next_node(destino)
+                if not exists:
+                    await pretty_print_async("El nodo destino no existe", "red")
+                    return
                 # await pretty_print_async(f"{str(siguiente)}", "magenta")
                 siguiente_text = clean_nombre(siguiente)
                 self.send_message_xmpp(mensaje=text, destino=siguiente)
