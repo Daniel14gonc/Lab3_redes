@@ -11,7 +11,7 @@ while bandera < 2:
     
     bandera =2
     for letra in abecesario:
-        user= "Archila161250"+ letra + '@alumchat.xyz'
+        user= "Archila161250"+ letra.lower() + '@alumchat.xyz'
         d_client = Delete_Cliente(user,user)
         d_client.connect(disable_starttls=True)
         d_client.process(forever=False)

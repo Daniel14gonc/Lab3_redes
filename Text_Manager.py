@@ -71,13 +71,9 @@ def ask_data(diferent):
     nombre = valid_input_string("Ingresa el nombre del nodo> ")
     
     data["nombre"] = 'Archila161250'+nombre+'@alumchat.xyz'
+    data["nombre"] = data["nombre"].lower()
     
-    if diferent:
-        vecinos = valid_input_string("Ingresa los vecinos separados por coma> ").split(",")
-        cantidad = valid_input_string("Ingrese la cantidad total de nodos en la topología> ")
-        data["cantidad"] = cantidad
-    else:
-        vecinos = valid_input_string("Ingresa los vecinos separados por coma> ").split(",")
+    vecinos = valid_input_string("Ingresa los vecinos separados por coma> ").split(",")
         
     temp_vecinos = []
     for vecino in vecinos:

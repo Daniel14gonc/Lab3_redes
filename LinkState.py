@@ -6,14 +6,17 @@ from slixmpp.exceptions import IqError, IqTimeout
 from slixmpp.xmlstream import ET
 import json
 import heapq
+import asyncio
 
 
 class LinkState(Node):
     def __init__(self, data):
         super().__init__(data)
-        self.len_network = int(data['cantidad'])
         self.topology = {self.name_domain: self.neighbors.copy()}
         self.ready = False
+        self.temporizador = None
+        self.tiempo = 30
+        self.already_started = False
 
     async def menu_algoritmos(self):
         op = ''
@@ -26,7 +29,10 @@ class LinkState(Node):
         await self.deleteaccount()
     
     async def start_flooding(self):
-        await self._send_flooding_message()
+        if not self.already_started:
+            await self.activate_timer()
+            self.already_started = True
+            await self._send_flooding_message()
             
 
     async def _send_flooding_message(self):
@@ -56,8 +62,25 @@ class LinkState(Node):
         try:
             self.dijkstra()
         except Exception as e:
-            await pretty_print_async("Error en dijikstra", "red")
+            await pretty_print_async("Error en Dijkstra", "red")
             await pretty_print_async(e, "red")
+    
+    async def set_ready(self):
+        await pretty_print_async("\nTiempo de espera terminado. Estoy listo para mandar mensajes.\n", "magenta")
+        await pretty_print_async(">", "none")
+        self.ready = True
+        await self.algoritmo()
+
+    async def iniciar_temporizador(self, tiempo_espera):
+        await pretty_print_async(f"Es necesario esperar {tiempo_espera} segundos para iniciar el algoritmo", "yellow")
+        await asyncio.sleep(tiempo_espera)
+        await self.set_ready()
+        
+    async def activate_timer(self):
+        if self.temporizador is not None:
+            self.temporizador.cancel()
+        self.temporizador = asyncio.create_task(self.iniciar_temporizador(self.tiempo))
+        
 
     async def handle_info_message(self, json_text):
         origen = json_text['headers']['origen']
@@ -70,12 +93,9 @@ class LinkState(Node):
             message = json.dumps(json_text)
             await self._send_message_neighbors(message)
         
-            if len(self.topology) == self.len_network:
-                await pretty_print_async("Topología completa", "green")
-                await self.algoritmo()
-                # await pretty_print_async(str(self.topology), "green")
-                self.ready = True
-            
+        await self.activate_timer()
+        
+    
     async def input_message(self):
         if self.ready:
             user, message = await self.menu_mensajes_priv()
