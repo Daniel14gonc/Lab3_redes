@@ -20,13 +20,14 @@ class LinkState(Node):
 
     async def menu_algoritmos(self):
         op = ''
-        while op != '3':
+        while self.is_connected:
             op = await link_state_menu()
             if op == '1':
                 await self.start_flooding()
             if op == '2':
                 await self.input_message()
-        await self.deleteaccount()
+            if op == '3':
+                self.is_connected = False
     
     async def start_flooding(self):
         if not self.already_started:
@@ -141,8 +142,9 @@ class LinkState(Node):
                     return
                 # await pretty_print_async(f"{str(siguiente)}", "magenta")
                 siguiente_text = clean_nombre(siguiente)
+                destino_text = clean_nombre(destino)
                 self.send_message_xmpp(mensaje=text, destino=siguiente)
-                await pretty_print_async(f"Mensaje reenviado de: '{de}' a '{siguiente_text}'", "magenta")
+                await pretty_print_async(f"Mensaje proveniente: '{de}',para {destino_text}. Reenviando a '{siguiente_text}' ", "magenta")
         else:
             await pretty_print_async("Esperando a que la topología se complete, no es posible enviar mensajes", "yellow")
     

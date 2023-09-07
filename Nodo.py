@@ -42,14 +42,15 @@ class Node(slixmpp.ClientXMPP):
     
     
     
-    async def start_all(self):
+    async def start_all(self,result):
+        result.set_result(True)
         await ainput("Al presionar Enter se agregaran los vecinos")
         await self.add_neighbors()
         try:
             await self.menu_algoritmos()
         except Exception as e:
             await pretty_print_async(e,"red")
-
+        
         
     async def LogIn(self,event):
         
@@ -63,7 +64,17 @@ class Node(slixmpp.ClientXMPP):
             #-------------------------------------------------
             
             try:
-                    self.menu = asyncio.create_task(self.start_all())
+                loop = asyncio.get_event_loop()
+                result= asyncio.Future()
+                menu = asyncio.create_task(self.start_all(result))
+                await menu
+                if result.result():
+                    await pretty_print_async("Desconectando...","red")
+                    self.is_connected = False
+                    menu.cancel()
+                    self.disconnect()
+                    
+                    
             except:
                 print("\033[31m\nError:\nAlgo inesperado ha pasado revisa tu conexión\033[0m")
                 self.is_connected = False
@@ -183,33 +194,18 @@ class Node(slixmpp.ClientXMPP):
             dicct[cont] = await ainput("Ingresa el nombre del usuario al que deseas enviar un mensaje (sin dominiio ni prefijo):")
             dicct[op] = self.prefijo+dicct[op]+"@alumchat.xyz"
         men = await ainput("Ingresa el mensaje que deseas enviar:")
-        return (dicct[op].lower(),men)    
+        return (dicct[op].lower(),men)  
+    
+    
+    
+
+            
         
     
-         
+
+
         
-        
-    async def deleteaccount(self):
-        response = self.Iq()
-        response['type'] = 'set'
-        response['from'] = self.boundjid.user
-        fragment = ET.fromstring("<query xmlns='jabber:iq:register'><remove/></query>")
-        response.append(fragment)
-        
-        try:
-            await response.send()
-            self.boundjid.jid
-            await pretty_print_async("Nodo eliminado correctamente","red")
-            self.is_connected = False
-            self.disconnect()
-            self.menu.cancel()
-            
-        except IqError as e:
-            await pretty_print_async(f"Problemas para enviar la solicitud: {e.iq['error']['text']}", "red")
-            self.disconnect()
-        except IqTimeout:
-            await pretty_print_async("\nError:\nSe ha excedido el tiempo de respuesta","red")
-            self.disconnect()
+
     
     
     

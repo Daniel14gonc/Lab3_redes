@@ -24,6 +24,7 @@ class DistanceVector(Node):
         self.old_table = self.tabla.copy()
         self.hop_table = {self.name_domain: self.name_domain}
         self.infinity = 1000000000000
+        self.table_timestamp = {}
         for n in self.neighbors:
             self.hop_table[n] = n
         
@@ -36,9 +37,21 @@ class DistanceVector(Node):
         
         self.tabla[self.name_domain] = self_entry
     
-    async def add_entry_to_table(self, node, entry):
-        self.tabla[node] = entry
+    async def add_entry_to_table(self, node, entry,tiempo):
+        if node not in self.table_timestamp:
+            self.table_timestamp[node] = tiempo
+            self.tabla[node] = entry
+            await pretty_print_async(f"tabla recibida de {node}: {entry}","yellow")
+        
+        elif self.table_timestamp[node] < tiempo:
+            self.table_timestamp[node] = tiempo
+            self.tabla[node] = entry
+            await pretty_print_async(f"tabla recibida de {node}: {entry}","yellow")
+        else:
+            pass
+        
 
+        self.tabla[node] = entry
         await pretty_print_async(f"tabla recibida de {node}: {entry}","yellow")
 
     async def add_node_to_table(self, node):
@@ -46,16 +59,18 @@ class DistanceVector(Node):
         if node not in self_table:
             self_table[node] = self.infinity
         self.tabla[self.name_domain] = self_table
+        
 
     async def menu_algoritmos(self):
         op = ''
-        while op != '3':
+        while self.is_connected:
             op = await link_state_menu()
             if op == '1':
                 await self.start_flooding()
             if op == '2':
                 await self.input_message()
-        await self.deleteaccount()
+            if op == '3':
+                self.is_connected = False
 
     
     async def start_flooding(self):
@@ -66,11 +81,17 @@ class DistanceVector(Node):
 
     async def _send_flooding_message(self):
         origen = self.name_domain
+        # Obtener la fecha y hora actual
+        fecha_hora_actual = datetime.datetime.now()
+
+        # Convertir la fecha y hora actual en un timestamp UNIX
+        timestamp = fecha_hora_actual.timestamp()
         message = {
                 "type": "info",
                 "headers": {
                     "origen": origen,
-                    "intermediarios": [origen]
+                    "intermediarios": [origen],
+                    "timestamp": timestamp,
                 },
                 "payload": self.tabla[origen]
         }
@@ -140,10 +161,10 @@ class DistanceVector(Node):
     async def check_convergence(self):
         return self.tabla[self.name_domain] == self.old_table[self.name_domain]
 
-    async def update_table(self, origin, entry):
+    async def update_table(self, origin, entry,tempo):
         self.old_table = copy.deepcopy(self.tabla)
         await self.add_node_to_table(origin)
-        await self.add_entry_to_table(origin, entry)
+        await self.add_entry_to_table(origin, entry,tempo)
         await self.algoritmo()
         if await self.check_convergence():
             await pretty_print_async("Convergencia alcanzada", "green")
@@ -156,13 +177,19 @@ class DistanceVector(Node):
     async def handle_info_message(self, json_text):
         origen = json_text['headers']['origen']
         intermediarios = json_text['headers']['intermediarios']
+        try:
+            tempo = json_text['headers']['timestamp']
+        except:
+            fecha_hora_actual = datetime.datetime.now()
+            tempo = fecha_hora_actual.timestamp()
+        
         payload = json_text['payload']
         await pretty_print_async(payload, "yellow")
         if self.name_domain not in intermediarios and not self.ready:
             json_text['headers']['intermediarios'].append(self.name_domain)
             message = json.dumps(json_text)
             await self._send_message_neighbors(message)
-            await self.update_table(origen, payload)
+            await self.update_table(origen, payload,tempo)
             
         await self.activate_timer()
         
@@ -187,6 +214,7 @@ class DistanceVector(Node):
             siguiente_text = clean_nombre(siguiente)
             self.send_message_xmpp(mensaje=json_text, destino=siguiente)
             await pretty_print_async(f"Enviando mensaje a '{siguiente_text}'", "magenta")
+            
             await pretty_print_async("Mensaje enviado", "green")
         else:
             await pretty_print_async("Esperando a que la topología se complete, no es posible enviar mensajes", "yellow")
@@ -211,8 +239,10 @@ class DistanceVector(Node):
                     return
                 # await pretty_print_async(f"{str(siguiente)}", "magenta")
                 siguiente_text = clean_nombre(siguiente)
+                destino_text = clean_nombre(destino)
                 self.send_message_xmpp(mensaje=text, destino=siguiente)
-                await pretty_print_async(f"Mensaje reenviado de: '{de}' a '{siguiente_text}'", "magenta")
+                await pretty_print_async(f"Mensaje proveniente: '{de}',para {destino_text}. Reenviando a '{siguiente_text}' ", "magenta")
+
         else:
             await pretty_print_async("Esperando a que la topología se complete, no es posible enviar mensajes", "yellow")
    
