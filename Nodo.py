@@ -7,6 +7,7 @@ import asyncio
 
 
 
+
 def register(client, password):
 
         jid = xmpp.JID(client)
@@ -50,7 +51,8 @@ class Node(slixmpp.ClientXMPP):
             await self.menu_algoritmos()
         except Exception as e:
             await pretty_print_async(e,"red")
-        
+    
+
         
     async def LogIn(self,event):
         

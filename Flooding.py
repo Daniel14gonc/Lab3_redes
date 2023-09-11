@@ -5,11 +5,13 @@ import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout
 from slixmpp.xmlstream import ET
 import json
+import datetime
 
 class Flooding(Node):
 
     def __init__(self, data):
         super().__init__(data)
+        self.mensajes_recibidos = {}
     
 
     async def menu_algoritmos(self):
@@ -20,7 +22,20 @@ class Flooding(Node):
                 await self.input_message()
             if op == '2':
                 self.is_connected = False
-                    
+
+    def get_time_stamp(self):
+        return datetime.datetime.now().timestamp()     
+    
+    def verify_duplicated_message(self,origen,timestamp):  
+        if origen not in self.mensajes_recibidos:
+            self.mensajes_recibidos[origen] = timestamp
+            return False
+        else:
+            if timestamp > self.mensajes_recibidos[origen]:
+                self.mensajes_recibidos[origen] = timestamp
+                return False
+            else:
+                return True
 
     async def input_message(self):
         user, message = await self.menu_mensajes_priv()
@@ -29,7 +44,8 @@ class Flooding(Node):
             "headers": {
                 "origen": self.name_domain,
                 "destino": user,
-                "intermediarios": [self.name_domain]
+                "intermediarios": [self.name_domain],
+                "timestamp": self.get_time_stamp()
             },
             "payload": message
         }
@@ -47,7 +63,7 @@ class Flooding(Node):
         intermediarios = json_text['headers']['intermediarios']
         message = json_text['payload']
         
-        if self.name_domain == destino:
+        if self.name_domain == destino and self.verify_duplicated_message(origen,json_text['headers']['timestamp']) == False:
             text = f"Origen de mensaje: {origen}"
             await pretty_print_async(text, "aqua")
             text = f"Contenido de mensaje: {message}"
