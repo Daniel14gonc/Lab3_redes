@@ -10,17 +10,17 @@ class Flooding(Node):
 
     def __init__(self, data):
         super().__init__(data)
+    
 
     async def menu_algoritmos(self):
         op = ''
-        while op != '2':
+        while self.is_connected:
             op = await flooding_menu()
             if op == '1':
                 await self.input_message()
-            
-        
-        await self.deleteaccount()
-        
+            if op == '2':
+                self.is_connected = False
+                    
 
     async def input_message(self):
         user, message = await self.menu_mensajes_priv()
