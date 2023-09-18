@@ -156,7 +156,7 @@ class LinkState(Node):
             else:
                 text = json.dumps(json_text)
                 de = clean_nombre(origen)
-                siguiente = self.get_next_node(destino)
+                siguiente = self.get_next_node(destino + "@alumchat.xyz")
                 if siguiente is None:
                     await pretty_print_async("No es posible enviar el mensaje, no existe una ruta", "red")
                     return
