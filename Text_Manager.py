@@ -62,6 +62,14 @@ async def valid_input_int_async(text, rango):
     
     return input_data
 
+def stupid_name(nombre):
+    nombre = clean_nombre(nombre.lower())
+    return "archila161250" + nombre
+
+def dirty_name(nombre):
+    nombre = clean_nombre(nombre.lower())
+    return "archila161250"+nombre+"@alumchat.xyz"
+
 def clean_nombre(nombre):
     return nombre.replace("@alumchat.xyz","").replace("archila161250","").split("/")[0]
 

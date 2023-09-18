@@ -33,18 +33,18 @@ class LinkState(Node):
         if not self.already_started:
             await self.activate_timer()
             self.already_started = True
-            await self._send_flooding_message()
-            
+            await self._send_flooding_message()   
 
     async def _send_flooding_message(self):
         origen = self.name_domain
+        origen = stupid_name(origen)
         message = {
                 "type": "info",
                 "headers": {
                     "origen": origen,
                     "intermediarios": [origen]
                 },
-                "payload": [n.lower() for n in self.neighbors if n != origen]
+                "payload": [clean_nombre(n.lower()) for n in self.neighbors if n != origen]
         }
         
         message = json.dumps(message)
@@ -67,6 +67,7 @@ class LinkState(Node):
             await pretty_print_async(e, "red")
     
     async def set_ready(self):
+        await pretty_print_async(self.topology, "green")
         await pretty_print_async("\nTiempo de espera terminado. Estoy listo para mandar mensajes.\n", "magenta")
         await pretty_print_async(">", "none")
         self.ready = True
@@ -81,16 +82,32 @@ class LinkState(Node):
         if self.temporizador is not None:
             self.temporizador.cancel()
         self.temporizador = asyncio.create_task(self.iniciar_temporizador(self.tiempo))
-        
+    
+    async def change_array(self, diccionary,bandera):
+        new_dicc = []
+        if bandera:
+            for d in diccionary:
+                await pretty_print_async(f"Letr cambiado {d}","")
+                new_d = dirty_name(d)
+                new_dicc.append(new_d)
+        else:
+            for d in diccionary:
+                await pretty_print_async(f"Letr cambiado {d}","")
+                new_d = clean_nombre(d)
+                new_dicc.append(new_d)
+        return new_dicc
 
     async def handle_info_message(self, json_text):
         origen = json_text['headers']['origen']
+        origen = origen + "@alumchat.xyz"
         intermediarios = json_text['headers']['intermediarios']
         payload = json_text['payload']
-        self.add_node_to_topology(origen, payload)
+        new_payload = await self.change_array(payload,True)
+        self.add_node_to_topology(origen, new_payload)
         # await pretty_print_async(str(self.topology), "green")
-        if self.name_domain not in intermediarios and not self.ready:
-            json_text['headers']['intermediarios'].append(self.name_domain)
+        self_name = stupid_name(self.name_domain)
+        if self_name not in intermediarios and not self.ready:
+            json_text['headers']['intermediarios'].append(self_name)
             message = json.dumps(json_text)
             await self._send_message_neighbors(message)
         
@@ -100,12 +117,14 @@ class LinkState(Node):
     async def input_message(self):
         if self.ready:
             user, message = await self.menu_mensajes_priv()
+            origen = stupid_name(self.name_domain)
+            dummy_user = stupid_name(user)
             json_message = {
                 "type": "message",
                 "headers": {
-                    "origen": self.name_domain,
-                    "destino": user,
-                    "intermediarios": [self.name_domain]
+                    "origen": origen,
+                    "destino": dummy_user,
+                    "intermediarios": [origen]
                 },
                 "payload": message
             }
@@ -128,7 +147,8 @@ class LinkState(Node):
             destino = json_text['headers']['destino']
             message = json_text['payload']
             de = clean_nombre(origen)
-            if self.name_domain == destino:
+            self_name = stupid_name(self.name_domain)
+            if self_name == destino:
                 text = f"Origen de mensaje: {de}"
                 await pretty_print_async(text, "aqua")
                 text = f"Contenido de mensaje: {message}"

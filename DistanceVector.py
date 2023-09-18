@@ -25,6 +25,7 @@ class DistanceVector(Node):
         self.hop_table = {self.name_domain: self.name_domain}
         self.infinity = 1000000000000
         self.table_timestamp = {}
+        self.mininame = stupid_name(self.name_domain)
         for n in self.neighbors:
             self.hop_table[n] = n
         
@@ -80,12 +81,14 @@ class DistanceVector(Node):
             
 
     async def _send_flooding_message(self):
-        origen = self.name_domain
+        origen = self.mininame
         # Obtener la fecha y hora actual
         fecha_hora_actual = datetime.datetime.now()
 
         # Convertir la fecha y hora actual en un timestamp UNIX
         timestamp = fecha_hora_actual.timestamp()
+        new_tabla = await self.change_diccionary(self.tabla[origen + "@alumchat.xyz"],False)
+        await pretty_print_async(f"Tabla enviada: {new_tabla}","red")
         message = {
                 "type": "info",
                 "headers": {
@@ -93,7 +96,7 @@ class DistanceVector(Node):
                     "intermediarios": [origen],
                     "timestamp": timestamp,
                 },
-                "payload": self.tabla[origen]
+                "payload": new_tabla
         }
         
         message = json.dumps(message)
@@ -144,6 +147,7 @@ class DistanceVector(Node):
     
     async def set_ready(self):
         await pretty_print_async("\nTiempo de espera terminado. Estoy listo para mandar mensajes.\n", "magenta")
+        await pretty_print_async(f"Tabla final {self.tabla[self.name_domain]}","magenta")
         await pretty_print_async(">", "none")
         self.ready = True
         # await self.algoritmo()
@@ -172,10 +176,30 @@ class DistanceVector(Node):
         else:
             await self.activate_timer()
             await self._send_flooding_message()
+            
+    async def change_diccionary(self, diccionary,bandera):
+        new_dicc = {}
+        if bandera:
+            for d in diccionary:
+                #await pretty_print_async(f"Letr cambiado {d}","")
+                new_d = dirty_name(d)
+                new_dicc[new_d] = diccionary[d]
+        else:
+            for d in diccionary:
+                #await pretty_print_async(f"Letr cambiado {d}","")
+                new_d = clean_nombre(d)
+                new_dicc[new_d] = diccionary[d]
+                
+        
+        return new_dicc
+    
+            
+        
         
 
     async def handle_info_message(self, json_text):
         origen = json_text['headers']['origen']
+        origen = origen + '@alumchat.xyz'
         intermediarios = json_text['headers']['intermediarios']
         try:
             tempo = json_text['headers']['timestamp']
@@ -184,12 +208,13 @@ class DistanceVector(Node):
             tempo = fecha_hora_actual.timestamp()
         
         payload = json_text['payload']
+        payload2 = await self.change_diccionary(payload,True)
         await pretty_print_async(payload, "yellow")
-        if self.name_domain not in intermediarios and not self.ready:
-            json_text['headers']['intermediarios'].append(self.name_domain)
+        if self.mininame not in intermediarios and not self.ready:
+            json_text['headers']['intermediarios'].append(self.mininame)
             message = json.dumps(json_text)
             await self._send_message_neighbors(message)
-            await self.update_table(origen, payload,tempo)
+            await self.update_table(origen, payload2,tempo)
             
         await self.activate_timer()
         
@@ -197,12 +222,13 @@ class DistanceVector(Node):
     async def input_message(self):
         if self.ready:
             user, message = await self.menu_mensajes_priv()
+            new_destino = stupid_name(user)
             json_message = {
                 "type": "message",
                 "headers": {
-                    "origen": self.name_domain,
-                    "destino": user,
-                    "intermediarios": [self.name_domain]
+                    "origen": self.mininame,
+                    "destino": new_destino,
+                    "intermediarios": [self.mininame]
                 },
                 "payload": message
             }
@@ -225,7 +251,7 @@ class DistanceVector(Node):
             origen = json_text['headers']['origen']
             destino = json_text['headers']['destino']
             message = json_text['payload']
-            if self.name_domain == destino:
+            if self.name_domain == destino or self.mininame == destino:
                 text = f"Origen de mensaje: {origen}"
                 await pretty_print_async(text, "aqua")
                 text = f"Contenido de mensaje: {message}"
@@ -233,6 +259,7 @@ class DistanceVector(Node):
             else:
                 text = json.dumps(json_text)
                 de = clean_nombre(origen)
+                destino = destino + "@alumchat.xyz"
                 exists, siguiente = self.get_next_node(destino)
                 if not exists:
                     await pretty_print_async("El nodo destino no existe", "red")

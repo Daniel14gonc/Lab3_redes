@@ -39,12 +39,14 @@ class Flooding(Node):
 
     async def input_message(self):
         user, message = await self.menu_mensajes_priv()
+        origen = stupid_name(self.name_domain)
+        user = stupid_name(user)
         json_message = {
             "type": "message",
             "headers": {
-                "origen": self.name_domain,
+                "origen": origen,
                 "destino": user,
-                "intermediarios": [self.name_domain],
+                "intermediarios": [origen],
                 "timestamp": self.get_time_stamp()
             },
             "payload": message
@@ -59,17 +61,19 @@ class Flooding(Node):
 
     async def intercept_message(self, json_text):
         origen = json_text['headers']['origen']
+        origen = origen + "@alumchat.xyz"
         destino = json_text['headers']['destino']
         intermediarios = json_text['headers']['intermediarios']
         message = json_text['payload']
-        
-        if self.name_domain == destino and self.verify_duplicated_message(origen,json_text['headers']['timestamp']) == False:
-            text = f"Origen de mensaje: {origen}"
+        new_origen = clean_nombre(origen)
+        self_name = stupid_name(self.name_domain)
+        if self_name == destino and self.verify_duplicated_message(origen, json_text['headers']['timestamp']) == False:
+            text = f"Origen de mensaje: {new_origen}"
             await pretty_print_async(text, "aqua")
             text = f"Contenido de mensaje: {message}"
             await pretty_print_async(text, "aqua")
-        elif self.name_domain not in intermediarios:
-            json_text['headers']['intermediarios'].append(self.name_domain)
+        elif self_name not in intermediarios:
+            json_text['headers']['intermediarios'].append(self_name)
             text = json.dumps(json_text)
             de = clean_nombre(origen)
             await self._send_message_neighbors(text)
